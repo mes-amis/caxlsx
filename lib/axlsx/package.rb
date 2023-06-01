@@ -125,7 +125,7 @@ module Axlsx
     # Serialize your workbook to a StringIO instance
     # @param [Boolean] confirm_valid Validate the package prior to serialization.
     # @return [StringIO|Boolean] False if confirm_valid and validation errors exist. rewound string IO if not.
-    def to_stream(confirm_valid = false)
+    def to_stream(io = ::StringIO.new, confirm_valid: false, rewind: true)
       if !workbook.styles_applied
         workbook.apply_styles
       end
@@ -133,10 +133,10 @@ module Axlsx
       return false unless !confirm_valid || self.validate.empty?
 
       Relationship.initialize_ids_cache
-      stream = BufferedZipOutputStream.write_buffer do |zip|
+      stream = BufferedZipOutputStream.write_buffer(io) do |zip|
         write_parts(zip)
       end
-      stream.rewind
+      stream.rewind if rewind
       stream
     ensure
       Relationship.clear_ids_cache
